@@ -1,0 +1,10 @@
+from MBWAnalysis import MBWAnalysis
+from LungSimGUI import run_gui
+
+
+def run_batch():
+    filename = "C:\\Users\\I0326962\\Local Files\\Former Desktop\\Cancer survivor study Bern\\A-files\\A-20220620-155737-WAETRI30052013-N2MultiBreathWashoutTest-Set2.txt"
+    optionsname =
+
+if __name__ == '__main__':
+    run_test()
