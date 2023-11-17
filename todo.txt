@@ -1,6 +1,0 @@
-# TODO:
-Create a loop which takes desired outcomes and attempts to calculate them, returning either the outcomes or
-LungSimExceptions.
-# TODO:
-Create a testing function which runs through known files and returns Spiroware accuracy and validated previous
-LungSim version accuracy.
