@@ -82,7 +82,6 @@ def style_config():
     plt.style.use('seaborn-v0_8-white')
 
 
-
 def resource_path(relative_path):
     try:
         base_path = sys._MEIPASS
@@ -502,7 +501,7 @@ class SignalWindow(tk.Frame):
         plt.close(self.fig)
 
         self.fig, self.axes = plt.subplots(self.subplot_nr, 1, sharex=True, facecolor=color_background)
-        plt.subplots_adjust(left=0.08, right=0.95, hspace=0.14)
+        self.fig.subplots_adjust(left=0.08, right=0.95, hspace=0.14)
 
         # If there is a single axis, we need to turn it into a list of length 1 for the code below to work properly
         if self.subplot_nr == 1:
@@ -516,6 +515,15 @@ class SignalWindow(tk.Frame):
 
         # rectangle annotation
         self.annotation = FigureAnnotation(self)
+
+    def disable_zoom(self):
+        self.toolbar.zoom()
+
+    def zoom_on(self):
+        return self.toolbar.mode == 'zoom rect'
+
+    def restore_home_view(self):
+        self.toolbar.home()
 
 
     def set_plot_entidal(self, bool):
@@ -689,8 +697,8 @@ class SignalWindow(tk.Frame):
 
     def insert_figure(self):
         self.graphs = FigureCanvasTkAgg(self.fig, master=self)
-        self.graphs.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
         self.graphs.draw()
+        self.graphs.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
 
         # Add the toolbar
         self.toolbar = NavigationToolbar2Tk(self.graphs, self)
@@ -709,6 +717,7 @@ class SignalWindow(tk.Frame):
     def on_click(self, event):
         state = self.toolbar.mode
         if state == 'zoom rect':
+            self.parent.artefact_choice.refresh()
             self.parent.explanation.update_label("turn_off_zoom")
 
         self.annotation.remove_static_rectangle()
@@ -723,7 +732,6 @@ class SignalWindow(tk.Frame):
             self.annotation.reset_rectangles(self.plot_idx_while_selecting)
 
         self.plot_idx_while_selecting = None
-
 
 
 class PlotToolbarWindow(tk.Frame):
@@ -786,26 +794,23 @@ class ExplanationWindow(tk.Frame):
         self.init_label()
 
     def init_label(self):
-        self.text = 'Grade the quality of the displayed trial and/or select ' \
-                    'an abnormality that you see appearing on the curve. ' \
-                    '\nYou can navigate through the \"Previous\" and \"Next\" ' \
-                    'button or in the Progression table.'
         self.label = Label(self, text=self.text, background=color_background, font=(main_font, font_medium),
                            justify=LEFT)
+        self.update_label('general')
+
         self.label.pack(fill='x')
 
     def update_label(self, text2display):
         if text2display == 'general':
-            self.text = 'Grade the quality of the displayed trial and/or select ' \
-                        'an abnormality that you see appearing on the curve. ' \
-                        '\nYou can navigate through the \"Previous\" and \"Next\" ' \
-                        'button or in the Progression table.'
+            self.text = '(1) Select and draw an abnormality you see on the trial\n' \
+                        '(2) Grade the trial (3) Add a comment\n' \
+                        'Navigate in trials using "<" and ">", the keyboard arrows or the progression table.'
         elif text2display == 'draw':
             self.text = 'Draw a rectangle on any plot'
         elif text2display == 'how2draw_save':
-            self.text = 'Drag and drop the mouse to create a rectangle around ' \
-                        'the located abnormality.\nOnce it is done, click the ' \
-                        '\"Save selected abnormality button\".'
+            self.text = 'Drag and drop the mouse to create a rectangle' \
+                        '\naround the located abnormality. ' \
+                        ' \nClick \"save abnormality\" to add it to the abnormality table '
         elif text2display == 'save_comm':
             self.text = 'Click on the \"Save\" button to save your comment.'
 
@@ -825,9 +830,7 @@ class SelectArtefactsWindow(tk.Frame):
         self.artefactLabel = 'None'
         self.Labels = ['leak', 'trapped gas', 'irregular breathing', 'cough/ sigh/ swallow', 'EELV step change',
                        'Early termination', 'Hypoventilation/ Hyperventilation', 'Undefined']
-
         self.save_coord_button = None
-
         self.init_buttons()
 
     def init_buttons(self):
@@ -858,6 +861,7 @@ class SelectArtefactsWindow(tk.Frame):
         self.parent.artefact_choice.deactivate_save_coord_button()
         self.parent.plots.annotation.deactivate_annotation()
         self.parent.explanation.refresh()
+        self.parent.plots.restore_home_view()
         self.refresh()
 
     def artefact_selection(self):
@@ -865,6 +869,8 @@ class SelectArtefactsWindow(tk.Frame):
         self.parent.plots.annotation.activate_annotation()
         self.artefactLabel = self.Labels[self.artefact.get() - 1]
         self.parent.explanation.update_label('draw')
+        if self.parent.plots.zoom_on():
+            self.parent.plots.disable_zoom()
 
     def refresh(self):
         self.artefact.set(0)
@@ -899,13 +905,11 @@ class FigureAnnotation(object):  # TODO: adapt the self.plot_idx depending on wh
 
     # activate rectangle only when an artefact name is selected in the radiobutton
     def activate_annotation(self):
-        print('activate annotation\n')
         self.parent.graphs.mpl_connect('axes_enter_event', self.on_enter_axis)
         self.flag_annotation_activated = True
 
     # deactivate when abnormality saved or plot changes, before selection of new artefact typ
     def deactivate_annotation(self):
-        print('desactivate annotation\n')
         self.flag_annotation_activated = False
         self.parent.graphs.mpl_disconnect(self.on_enter_axis)
         self.reset_rectangles()
@@ -974,7 +978,6 @@ class FigureAnnotation(object):  # TODO: adapt the self.plot_idx depending on wh
             self.selector_rectangle.set_active(False)
             self.selector_rectangle.set_visible(False)
             self.parent.axes[idx].figure.canvas.draw()
-
 
 
 class SelectGradeWindow(tk.Frame):
