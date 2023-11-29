@@ -973,7 +973,7 @@ class FigureAnnotation(object):  # TODO: adapt the self.plot_idx depending on wh
 
     def remove_selector_rectangle(self, idx):
         if self.selector_rectangle is not None:
-            #for artist in self.selector_rectangle.artists:
+            # for artist in self.selector_rectangle.artists:
             #    artist.set_visible(False)
             self.selector_rectangle.set_active(False)
             self.selector_rectangle.set_visible(False)
